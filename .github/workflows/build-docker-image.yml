@@ -2,9 +2,9 @@ name: Docker Image Build
 
 on:
   push:
-    branches: [ "*" ]
+    branches: [ "*", "!mian" ]
   pull_request:
-    branches: [ "*" ]
+    branches: [ "*", "!mian" ]
 
 jobs:
   build:
