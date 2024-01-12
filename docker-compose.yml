@@ -1,47 +1,51 @@
-version: '2.3'
+version: '3'
 services:
   xserver:
     image: ghcr.io/ihelal-org/docker-xserver:latest
     ipc: host
     security_opt:
-    - seccomp:unconfined
+      - seccomp:unconfined
     ports:
-    - "3000:80"
+      - "3000:80"
     healthcheck:
       test: ["CMD-SHELL", "test -e /tmp/.X11-unix/X0"]
       interval: "1s"
       retries: 20
-  # TODO: Skip for now but come back to this to have sim in the env
+
   simulator:
-    image: ghcr.io/ihelal-org/ros-devcontainer-vscode:latest
+    image: robot-sim:latest
     ipc: host
     security_opt:
-    - seccomp:unconfined
+      - seccomp:unconfined
     environment:
-    - DISPLAY=:0
+      - DISPLAY=:0
+      # Add ROS_MASTER_URI environment variable pointing to itself
+      - ROS_MASTER_URI=http://simulator:11311
     volumes_from:
-    - xserver
+      - xserver
     depends_on:
-    - xserver
+      - xserver
+
   workspace:
-    # env_file:
-    #   - .env
-    image: ghcr.io/ihelal-org/ros-devcontainer-vscode:latest
+    image: ros-dev:latest
     ipc: host
     security_opt:
-    - seccomp:unconfined
+      - seccomp:unconfined
     ports:
-    - "3001:3000"
-    - "3002:8888"
+      - "3001:3000"
+      - "3002:8888"
     volumes:
-    - workspace:/workspace
+      - workspace:/workspace
     environment:
-    - DISPLAY=:0
-    - ROS_MASTER_URI=http://simulator:11311/
+      - DISPLAY=:0
+      # Ensure this points to the ROS master in the simulator container
+      - ROS_MASTER_URI=http://simulator:11311/
     volumes_from:
-    - xserver
-    - simulator
+      - xserver
+      - simulator
     depends_on:
-    - xserver
+      - xserver
+      - simulator  # Ensure workspace waits for simulator to start
+
 volumes:
   workspace:
